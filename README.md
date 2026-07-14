@@ -1,89 +1,88 @@
-# @bokaif/react-avro-phonetic
+# react-avro-phonetic
 
-A headless hook and wrapper component for adding Avro phonetic Bengali typing to any React application. 
+Avro phonetic Bengali typing for any React input. Drop it in and get suggestions as you type — same behavior as [avro.im](https://avro.im).
 
-Provides floating word suggestions as you type, just like the official Avro software, while giving you complete control over styling and behavior.
-
-## Installation
+**[Demo](https://bokaif.github.io/react-avro-phonetic/)**
 
 ```bash
 npm install @bokaif/react-avro-phonetic
 ```
 
-## Quick Start (Wrapper Component)
+---
 
-Wrap any standard HTML `input` or `textarea` (or any custom UI component that accepts standard `ref`, `onChange`, and `onKeyDown` props).
+## Usage
+
+### `<Avro>` — wrapper component
+
+Wrap any `<input>` or `<textarea>`. Suggestions appear automatically.
 
 ```tsx
 import { Avro } from '@bokaif/react-avro-phonetic';
 
-export default function App() {
+function App() {
   return (
     <Avro>
-      <input type="text" placeholder="Type in English (e.g., amar)" />
+      <input type="text" placeholder="amar sonar bangla..." />
     </Avro>
   );
 }
 ```
-*A suggestion dropdown will automatically appear at your cursor.*
 
-## Headless Hook (`useAvro`)
+Keyboard: `↑`/`↓` to navigate, `Enter` or `Space` to select, `Esc` to dismiss.
 
-For complete control over the UI and dropdown positioning, use the headless hook. 
+### `useAvro` — headless hook
+
+Build your own UI around the engine.
 
 ```tsx
 import { useAvro } from '@bokaif/react-avro-phonetic';
 
-export default function CustomInput() {
-  const { 
-    inputRef, 
-    bindings, 
-    suggestions, 
-    isSuggesting, 
-    replaceWord 
-  } = useAvro();
+function MyInput() {
+  const { inputRef, bindings, suggestions, isSuggesting, replaceWord } = useAvro();
 
   return (
     <div style={{ position: 'relative' }}>
       <input ref={inputRef} {...bindings} />
-      
+
       {isSuggesting && (
-        <div className="absolute top-full left-0 bg-white border">
-          {suggestions.map(word => (
-            <div key={word} onMouseDown={(e) => {
-              e.preventDefault();
-              replaceWord(word);
-            }}>
+        <ul>
+          {suggestions.map((word) => (
+            <li key={word} onMouseDown={(e) => { e.preventDefault(); replaceWord(word); }}>
               {word}
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );
 }
 ```
 
-## Raw API
+### `parse` — phonetic conversion
 
-Convert phonetic English to Bengali programmatically:
-
-```typescript
+```ts
 import { parse } from '@bokaif/react-avro-phonetic';
 
-console.log(parse("ami banglay gan gai")); // আমি বাংলায় গান গাই
+parse('ami banglay gan gai'); // আমি বাংলায় গান গাই
+parse('boka');                // বকা
 ```
 
-## Styling the Wrapper
+---
 
-You can pass inline styles directly to the `<Avro>` component to match your theme.
+## Styling `<Avro>`
 
 ```tsx
-<Avro 
-  dropdownStyle={{ background: '#fff', border: '1px solid #ccc' }}
-  itemStyle={{ padding: '8px', color: '#333' }}
-  activeItemStyle={{ background: '#f0f0f0' }}
+<Avro
+  dropdownStyle={{ background: '#1e1e1e', border: '1px solid #333' }}
+  itemStyle={{ padding: '6px 12px', color: '#eee' }}
+  activeItemStyle={{ background: '#0070f3', color: '#fff' }}
 >
-  <textarea />
+  <textarea rows={4} />
 </Avro>
 ```
+
+---
+
+## License
+
+MIT
