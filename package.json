@@ -1,0 +1,57 @@
+{
+  "name": "@bokaif/react-avro-phonetic",
+  "version": "1.0.0",
+  "description": "A modern React component for phonetic Bengali typing. Type in English, get instant বাংলা.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean --external react,react-dom",
+    "test": "echo 'See test.ts'",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "avro",
+    "phonetic",
+    "bangla",
+    "bengali",
+    "react",
+    "typescript",
+    "input",
+    "keyboard"
+  ],
+  "author": "bokaif",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bokaif/react-avro-phonetic.git"
+  },
+  "homepage": "https://github.com/bokaif/react-avro-phonetic#readme",
+  "bugs": {
+    "url": "https://github.com/bokaif/react-avro-phonetic/issues"
+  },
+  "type": "commonjs",
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.3",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  }
+}
