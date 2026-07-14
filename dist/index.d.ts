@@ -45,17 +45,9 @@ declare const AvroInput: React.ForwardRefExoticComponent<AvroInputProps & React.
 
 interface AvroProps {
     children: React.ReactElement;
-    /**
-     * Inline styles for the dropdown menu
-     */
+    /** unused, kept for API compat */
     dropdownStyle?: CSSProperties;
-    /**
-     * Inline styles for each item in the dropdown
-     */
     itemStyle?: CSSProperties;
-    /**
-     * Inline styles for the active item in the dropdown
-     */
     activeItemStyle?: CSSProperties;
 }
 declare const Avro: React.FC<AvroProps>;
@@ -69,7 +61,6 @@ declare function useAvro(props?: UseAvroProps): {
     bindings: {
         onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
         onKeyDown: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-        onBlur: () => void;
     };
     suggestions: string[];
     activeIndex: number;
@@ -79,8 +70,8 @@ declare function useAvro(props?: UseAvroProps): {
         left: number;
         height: number;
     };
-    replaceWord: (suggestion: string) => void;
-    setActiveIndex: React.Dispatch<React.SetStateAction<number>>;
+    replaceWord: (_: string) => void;
+    setActiveIndex: (_: number) => void;
 };
 
 declare class AvroRegex {
