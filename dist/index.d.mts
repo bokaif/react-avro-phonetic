@@ -83,7 +83,69 @@ declare function useAvro(props?: UseAvroProps): {
     setActiveIndex: React.Dispatch<React.SetStateAction<number>>;
 };
 
+declare class AvroRegex {
+    data: any;
+    findMode: boolean;
+    constructor(findMode?: boolean);
+    _fixString(e: string): string;
+    _isVowel(e: string): boolean;
+    _isConsonant(e: string): boolean;
+    _isPunctuation(e: string): boolean;
+    _isExact(e: string, t: string, n: number, r: number, i: boolean): boolean;
+    _isIgnore(e: string): boolean;
+    parse(e: string): string;
+}
+
+declare class DBSearch {
+    _phoneticData: Record<string, string[]>;
+    _regex: AvroRegex;
+    constructor();
+    search(e: string): string[];
+    private _searchInArray;
+}
+
+declare class SuggestionBuilder {
+    private dbsearch;
+    private max;
+    private minDistance;
+    private suffixDict;
+    private autocorrectDict;
+    private _candidateSelections;
+    private _phoneticCache;
+    private _tempCache;
+    private _pref;
+    private avroRegex;
+    constructor(dbsearch?: DBSearch, max?: number, minDistance?: number);
+    private _defaultPref;
+    private _getDictionarySuggestion;
+    private _getClassicPhonetic;
+    private _correctCase;
+    private _getAutocorrect;
+    private _separatePadding;
+    private _sortByPhoneticRelevance;
+    private _addToArray;
+    private _convertToUnicodeValue;
+    private _isKar;
+    private _isVowel;
+    private _addToTempCache;
+    private _addSuffix;
+    private _joinSuggestion;
+    private _getPreviousSelection;
+    private _loadCandidateSelectionsFromFile;
+    private _saveCandidateSelectionsToFile;
+    private _updateCandidateSelection;
+    getPref(): {
+        dictEnable: boolean;
+    };
+    setPref(e: {
+        dictEnable: boolean;
+    }): void;
+    stringCommitted(e: string, t: string): void;
+    updateCandidateSelection(e: string, t: string): void;
+    suggest(e: string): any;
+}
+
 declare const avro: AvroPhonetic;
 declare function parse(input: string): string;
 
-export { Avro, AvroInput, type AvroInputProps, type AvroProps, type UseAvroProps, avro as default, parse, useAvro };
+export { Avro, AvroInput, type AvroInputProps, type AvroProps, SuggestionBuilder, type UseAvroProps, avro as default, parse, useAvro };

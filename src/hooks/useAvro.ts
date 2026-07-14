@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import getCaretCoordinates from 'textarea-caret';
 import { parse } from '../index';
-import { getSuggestions } from '../suggestor';
+import { getSuggestions, suggestor } from '../suggestor';
 
 export interface UseAvroProps {
     onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
@@ -111,6 +111,12 @@ export function useAvro(props?: UseAvroProps) {
             } else if (e.key === 'Enter' || e.key === 'Tab' || e.key === ' ') {
                 e.preventDefault();
                 const selected = suggestions[activeIndex];
+                
+                if (activeWordData.current) {
+                    suggestor.updateCandidateSelection(activeWordData.current.word, selected);
+                    suggestor.stringCommitted(activeWordData.current.word, selected);
+                }
+                
                 replaceWord(selected);
                 
                 // If it was a space, we want to append the space after replacing
