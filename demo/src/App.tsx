@@ -1,4 +1,3 @@
-
 import { Avro } from '@bokaif/react-avro-phonetic'
 import './App.css'
 
@@ -9,21 +8,21 @@ function App() {
         React Avro Phonetic
       </h1>
       <p style={{ fontSize: '1.2rem', color: '#4b5563', marginBottom: '3rem' }}>
-        A beautiful, headless phonetic Bengali typing experience for React.
+        Type English phonetic → press <kbd>Space</kbd> or <kbd>Enter</kbd> → converts to Bengali.
       </p>
 
       <div style={{ background: '#f3f4f6', padding: '2rem', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', textAlign: 'left' }}>
-        <h2 style={{ marginTop: 0, color: '#1f2937' }}>Try it out</h2>
+        <h2 style={{ marginTop: 0, color: '#1f2937' }}>Try it</h2>
         <p style={{ color: '#4b5563', marginBottom: '1.5rem' }}>
-          Wrap any input with the <code>&lt;Avro&gt;</code> component and type in English (e.g. <i>amar sonar bangla</i>).
+          Type <i>ami</i>, <i>boka</i>, <i>bangladesh</i>, <i>bhalo</i>… then press space.
         </p>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Standard Input</label>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Input</label>
           <Avro>
-            <input 
-              type="text" 
-              placeholder="Start typing..." 
+            <input
+              type="text"
+              placeholder="ami sonar bangla..."
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -31,21 +30,18 @@ function App() {
                 border: '2px solid #d1d5db',
                 borderRadius: '8px',
                 outline: 'none',
+                boxSizing: 'border-box',
               }}
             />
           </Avro>
         </div>
 
         <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Textarea with Custom Dropdown Theme</label>
-          <Avro
-            dropdownStyle={{ background: '#1f2937', color: 'white', borderRadius: '8px', overflow: 'hidden' }}
-            itemStyle={{ padding: '10px 16px', borderBottom: '1px solid #374151' }}
-            activeItemStyle={{ background: '#3b82f6', color: 'white' }}
-          >
-            <textarea 
-              rows={4}
-              placeholder="Multi-line typing works too!" 
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Textarea</label>
+          <Avro>
+            <textarea
+              rows={5}
+              placeholder="Multi-line works too..."
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -53,15 +49,16 @@ function App() {
                 border: '2px solid #d1d5db',
                 borderRadius: '8px',
                 outline: 'none',
-                resize: 'vertical'
+                resize: 'vertical',
+                boxSizing: 'border-box',
               }}
             />
           </Avro>
         </div>
       </div>
-      
+
       <div style={{ marginTop: '3rem', color: '#6b7280' }}>
-        <p>Built by bokaif. <a href="https://github.com/bokaif/react-avro-phonetic" style={{ color: '#2563eb' }}>View on GitHub</a></p>
+        <p>Built by bokaif. <a href="https://github.com/bokaif/react-avro-phonetic" style={{ color: '#2563eb' }}>GitHub</a> · <a href="https://www.npmjs.com/package/@bokaif/react-avro-phonetic" style={{ color: '#2563eb' }}>npm</a></p>
       </div>
     </div>
   )
