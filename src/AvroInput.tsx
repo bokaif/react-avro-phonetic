@@ -1,6 +1,5 @@
-
-import React, { useRef, useState, useEffect, CSSProperties } from "react";
-import { parse } from "./index";
+import React, { CSSProperties } from "react";
+import { Avro } from "./components/Avro";
 
 export interface AvroInputProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
     onValueChange?: (value: string) => void;
@@ -29,103 +28,23 @@ const defaultStyle: CSSProperties = {
 };
 
 export const AvroInput = React.forwardRef<HTMLTextAreaElement, AvroInputProps>(
-    ({ className, onValueChange, useDefaultStyles = true, style, ...props }, ref) => {
-        const [value, setValue] = useState("");
-        const innerRef = useRef<HTMLTextAreaElement>(null);
-        const cursorRef = useRef<number | null>(null);
-
-        // Allow both internal and external refs
-        useEffect(() => {
-            if (!ref) return;
-            if (typeof ref === 'function') {
-                ref(innerRef.current);
-            } else {
-                ref.current = innerRef.current;
-            }
-        }, [ref]);
-
-        // Apply cursor position after render if needed
-        useEffect(() => {
-            if (cursorRef.current !== null && innerRef.current) {
-                innerRef.current.selectionStart = cursorRef.current;
-                innerRef.current.selectionEnd = cursorRef.current;
-                cursorRef.current = null;
-            }
-        }, [value]);
-
-        const getCaret = (el: HTMLTextAreaElement) => el.selectionStart;
-
-        const findLast = (el: HTMLTextAreaElement, cur: number) => {
-            let last = cur - 1;
-            while (last > 0) {
-                const c = el.value.charAt(last);
-                if (/\s/.test(c)) {
-                    break;
-                }
-                last--;
-            }
-            return last;
-        };
-
+    ({ className, onValueChange, useDefaultStyles = true, style, onChange, ...props }, ref) => {
+        
         const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-            setValue(e.target.value);
+            if (onChange) onChange(e);
             if (onValueChange) onValueChange(e.target.value);
-            if (props.onChange) props.onChange(e); // Forward native onChange
-        };
-
-        const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-            if (props.onKeyDown) props.onKeyDown(e); // Forward native onKeyDown
-            if (e.defaultPrevented) return;
-
-            if (e.key === " " || e.key === "Enter" || e.key === "Tab") {
-                const el = innerRef.current;
-                if (!el) return;
-
-                const cur = getCaret(el);
-                let last = findLast(el, cur);
-
-                // adjust if finding a space at the start of the check boundary
-                if (last >= 0 && /\s/.test(el.value.charAt(last))) {
-                    last++;
-                }
-
-                if (cur <= last) return;
-
-                const word = el.value.substring(last, cur);
-                const bangla = parse(word);
-
-                let delimiter = "";
-                if (e.key === " ") delimiter = " ";
-                if (e.key === "Enter") delimiter = "\n";
-
-                const prefix = el.value.substring(0, last);
-                const suffix = el.value.substring(cur);
-
-                // Explicitly force the delimiter into the new value
-                const newValue = prefix + bangla + delimiter + suffix;
-
-                setValue(newValue);
-                if (onValueChange) onValueChange(newValue);
-
-                // Calculate where cursor should be
-                cursorRef.current = prefix.length + bangla.length + delimiter.length;
-
-                if (e.key !== "Tab") {
-                    e.preventDefault();
-                }
-            }
         };
 
         return (
-            <textarea
-                ref={innerRef}
-                value={value}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                style={useDefaultStyles ? { ...defaultStyle, ...style } : style}
-                className={className}
-                {...props}
-            />
+            <Avro>
+                <textarea
+                    ref={ref}
+                    style={useDefaultStyles ? { ...defaultStyle, ...style } : style}
+                    className={className}
+                    onChange={handleChange}
+                    {...props}
+                />
+            </Avro>
         );
     }
 );

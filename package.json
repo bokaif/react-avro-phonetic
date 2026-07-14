@@ -49,9 +49,13 @@
     "@types/node": "^25.0.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@types/textarea-caret": "^3.0.4",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "textarea-caret": "^3.1.0"
   }
 }

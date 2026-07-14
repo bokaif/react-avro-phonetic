@@ -1860,7 +1860,285 @@ var AvroPhonetic = class {
 };
 
 // src/AvroInput.tsx
-import React, { useRef, useState, useEffect } from "react";
+import React3 from "react";
+
+// src/components/Avro.tsx
+import React2 from "react";
+
+// src/hooks/useAvro.ts
+import { useState, useRef, useCallback } from "react";
+import getCaretCoordinates from "textarea-caret";
+
+// src/suggestor.ts
+var charVariations = {
+  "a": ["a", "o", "e", "ya", "a:", "aZ"],
+  "o": ["o", "u", "a", "O"],
+  "e": ["e", "i", "a", "E"],
+  "i": ["i", "e", "ee", "I"],
+  "u": ["u", "o", "oo", "U"],
+  "s": ["s", "sh", "S"],
+  "t": ["t", "T", "th"],
+  "d": ["d", "D", "dh"],
+  "n": ["n", "N"],
+  "r": ["r", "R"],
+  "k": ["k", "K", "kh"],
+  "g": ["g", "G", "gh"],
+  "c": ["c", "ch", "C"],
+  "j": ["j", "J", "jh"],
+  "p": ["p", "P", "ph"],
+  "b": ["b", "B", "bh"],
+  "m": ["m", "M"],
+  "l": ["l", "L"],
+  "v": ["v", "bh"],
+  "y": ["y", "j"]
+};
+function getSuggestions(word, parse2) {
+  if (!word) return [];
+  const suggestions = /* @__PURE__ */ new Set();
+  suggestions.add(parse2(word));
+  if (word.toLowerCase() === "a") {
+    ["\u0986", "\u0986\u0983", "\u09BE", "\u098F", "\u0985\u09CD\u09AF\u09BE", "\u0985\u09CD\u09AF\u09BE\u0981"].forEach((v) => suggestions.add(v));
+  }
+  if (word.toLowerCase() === "o") {
+    ["\u0993", "\u0985", "\u09CB"].forEach((v) => suggestions.add(v));
+  }
+  if (word.toLowerCase() === "e") {
+    ["\u098F", "\u0987", "\u09C7", "\u09BF"].forEach((v) => suggestions.add(v));
+  }
+  const chars = word.split("");
+  let substitutedCount = 0;
+  for (let i = chars.length - 1; i >= 0 && substitutedCount < 2; i--) {
+    const c = chars[i].toLowerCase();
+    if (charVariations[c]) {
+      for (const alt of charVariations[c]) {
+        if (alt.toLowerCase() === c) continue;
+        const altWord = word.substring(0, i) + alt + word.substring(i + 1);
+        suggestions.add(parse2(altWord));
+      }
+      substitutedCount++;
+    }
+  }
+  suggestions.add(word);
+  return Array.from(suggestions);
+}
+
+// src/hooks/useAvro.ts
+function useAvro(props) {
+  const [suggestions, setSuggestions] = useState([]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [caretCoords, setCaretCoords] = useState({ top: 0, left: 0, height: 0 });
+  const inputRef = useRef(null);
+  const activeWordData = useRef(null);
+  const updateSuggestions = useCallback(() => {
+    const el = inputRef.current;
+    if (!el || typeof el.selectionStart !== "number") return;
+    const val = el.value;
+    const cur = el.selectionStart;
+    let start = cur - 1;
+    while (start >= 0 && !/\s/.test(val.charAt(start))) {
+      start--;
+    }
+    start++;
+    let end = cur;
+    while (end < val.length && !/\s/.test(val.charAt(end))) {
+      end++;
+    }
+    if (start < cur) {
+      const word = val.substring(start, cur);
+      activeWordData.current = { word, start, end: cur };
+      const newSuggestions = getSuggestions(word, parse);
+      setSuggestions(newSuggestions);
+      setActiveIndex(0);
+      setIsSuggesting(true);
+      const coords = getCaretCoordinates(el, cur);
+      setCaretCoords(coords);
+    } else {
+      setIsSuggesting(false);
+      activeWordData.current = null;
+    }
+  }, []);
+  const replaceWord = useCallback((suggestion) => {
+    const el = inputRef.current;
+    if (!el || !activeWordData.current) return;
+    const { start, end } = activeWordData.current;
+    const val = el.value;
+    const prefix = val.substring(0, start);
+    const suffix = val.substring(end);
+    const newValue = prefix + suggestion + suffix;
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+    const nativeTextAreaValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value")?.set;
+    if (el.tagName === "TEXTAREA" && nativeTextAreaValueSetter) {
+      nativeTextAreaValueSetter.call(el, newValue);
+    } else if (nativeInputValueSetter) {
+      nativeInputValueSetter.call(el, newValue);
+    } else {
+      el.value = newValue;
+    }
+    const event = new Event("input", { bubbles: true });
+    el.dispatchEvent(event);
+    const newCursorPos = start + suggestion.length;
+    setTimeout(() => {
+      el.selectionStart = newCursorPos;
+      el.selectionEnd = newCursorPos;
+      setIsSuggesting(false);
+      activeWordData.current = null;
+    }, 0);
+  }, []);
+  const handleChange = useCallback((e) => {
+    if (props?.onChange) props.onChange(e);
+    updateSuggestions();
+  }, [props, updateSuggestions]);
+  const handleKeyDown = useCallback((e) => {
+    if (isSuggesting && suggestions.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex((prev) => (prev + 1) % suggestions.length);
+        return;
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length);
+        return;
+      } else if (e.key === "Enter" || e.key === "Tab" || e.key === " ") {
+        e.preventDefault();
+        const selected = suggestions[activeIndex];
+        replaceWord(selected);
+        if (e.key === " ") {
+          setTimeout(() => {
+            const el = inputRef.current;
+            if (!el) return;
+            const cur = el.selectionStart;
+            const nativeSet = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), "value")?.set;
+            if (nativeSet) {
+              nativeSet.call(el, el.value.substring(0, cur) + " " + el.value.substring(cur));
+              el.dispatchEvent(new Event("input", { bubbles: true }));
+              el.selectionStart = cur + 1;
+              el.selectionEnd = cur + 1;
+            }
+          }, 0);
+        }
+        return;
+      } else if (e.key === "Escape") {
+        setIsSuggesting(false);
+        return;
+      }
+    }
+    if (props?.onKeyDown) props.onKeyDown(e);
+    setTimeout(() => {
+      updateSuggestions();
+    }, 0);
+  }, [isSuggesting, suggestions, activeIndex, replaceWord, props, updateSuggestions]);
+  const handleBlur = useCallback(() => {
+    setTimeout(() => {
+      setIsSuggesting(false);
+    }, 150);
+  }, []);
+  return {
+    inputRef,
+    bindings: {
+      onChange: handleChange,
+      onKeyDown: handleKeyDown,
+      onBlur: handleBlur
+    },
+    suggestions,
+    activeIndex,
+    isSuggesting,
+    caretCoords,
+    replaceWord,
+    setActiveIndex
+  };
+}
+
+// src/components/Avro.tsx
+var defaultDropdownStyle = {
+  position: "absolute",
+  background: "#2c2c2c",
+  border: "1px solid #444",
+  borderRadius: "4px",
+  boxShadow: "0 4px 6px rgba(0,0,0,0.3)",
+  zIndex: 9999,
+  minWidth: "150px",
+  overflow: "hidden",
+  fontFamily: "sans-serif"
+};
+var defaultItemStyle = {
+  padding: "8px 12px",
+  cursor: "pointer",
+  color: "#fff",
+  fontSize: "16px"
+};
+var defaultActiveItemStyle = {
+  background: "#f99e3a",
+  color: "#000"
+};
+var Avro = ({ children, dropdownStyle, itemStyle, activeItemStyle }) => {
+  if (!React2.isValidElement(children)) {
+    return /* @__PURE__ */ React2.createElement(React2.Fragment, null, children);
+  }
+  const childElement = children;
+  const childProps = childElement.props;
+  const {
+    inputRef,
+    bindings,
+    suggestions,
+    activeIndex,
+    isSuggesting,
+    caretCoords,
+    replaceWord,
+    setActiveIndex
+  } = useAvro({
+    onChange: childProps.onChange,
+    onKeyDown: childProps.onKeyDown
+  });
+  const handleRef = (node) => {
+    inputRef.current = node;
+    const childRef = children.ref;
+    if (typeof childRef === "function") {
+      childRef(node);
+    } else if (childRef) {
+      childRef.current = node;
+    }
+  };
+  const clonedChild = React2.cloneElement(childElement, {
+    ref: handleRef,
+    onChange: bindings.onChange,
+    onKeyDown: bindings.onKeyDown,
+    onBlur: (e) => {
+      if (childProps.onBlur) childProps.onBlur(e);
+      bindings.onBlur();
+    }
+  });
+  return /* @__PURE__ */ React2.createElement("div", { style: { position: "relative", display: "inline-block", width: "100%" } }, clonedChild, isSuggesting && suggestions.length > 0 && /* @__PURE__ */ React2.createElement(
+    "div",
+    {
+      style: {
+        ...defaultDropdownStyle,
+        ...dropdownStyle,
+        top: caretCoords.top + caretCoords.height + 5,
+        left: caretCoords.left
+      }
+    },
+    suggestions.map((s, idx) => /* @__PURE__ */ React2.createElement(
+      "div",
+      {
+        key: `${s}-${idx}`,
+        style: {
+          ...defaultItemStyle,
+          ...itemStyle,
+          ...idx === activeIndex ? { ...defaultActiveItemStyle, ...activeItemStyle } : {}
+        },
+        onMouseEnter: () => setActiveIndex(idx),
+        onMouseDown: (e) => {
+          e.preventDefault();
+          replaceWord(s);
+        }
+      },
+      s
+    ))
+  ));
+};
+
+// src/AvroInput.tsx
 var defaultStyle = {
   width: "100%",
   padding: "1rem",
@@ -1876,83 +2154,22 @@ var defaultStyle = {
   transition: "all 0.2s ease-in-out",
   fontFamily: "inherit"
 };
-var AvroInput = React.forwardRef(
-  ({ className, onValueChange, useDefaultStyles = true, style, ...props }, ref) => {
-    const [value, setValue] = useState("");
-    const innerRef = useRef(null);
-    const cursorRef = useRef(null);
-    useEffect(() => {
-      if (!ref) return;
-      if (typeof ref === "function") {
-        ref(innerRef.current);
-      } else {
-        ref.current = innerRef.current;
-      }
-    }, [ref]);
-    useEffect(() => {
-      if (cursorRef.current !== null && innerRef.current) {
-        innerRef.current.selectionStart = cursorRef.current;
-        innerRef.current.selectionEnd = cursorRef.current;
-        cursorRef.current = null;
-      }
-    }, [value]);
-    const getCaret = (el) => el.selectionStart;
-    const findLast = (el, cur) => {
-      let last = cur - 1;
-      while (last > 0) {
-        const c = el.value.charAt(last);
-        if (/\s/.test(c)) {
-          break;
-        }
-        last--;
-      }
-      return last;
-    };
+var AvroInput = React3.forwardRef(
+  ({ className, onValueChange, useDefaultStyles = true, style, onChange, ...props }, ref) => {
     const handleChange = (e) => {
-      setValue(e.target.value);
+      if (onChange) onChange(e);
       if (onValueChange) onValueChange(e.target.value);
-      if (props.onChange) props.onChange(e);
     };
-    const handleKeyDown = (e) => {
-      if (props.onKeyDown) props.onKeyDown(e);
-      if (e.defaultPrevented) return;
-      if (e.key === " " || e.key === "Enter" || e.key === "Tab") {
-        const el = innerRef.current;
-        if (!el) return;
-        const cur = getCaret(el);
-        let last = findLast(el, cur);
-        if (last >= 0 && /\s/.test(el.value.charAt(last))) {
-          last++;
-        }
-        if (cur <= last) return;
-        const word = el.value.substring(last, cur);
-        const bangla = parse(word);
-        let delimiter = "";
-        if (e.key === " ") delimiter = " ";
-        if (e.key === "Enter") delimiter = "\n";
-        const prefix = el.value.substring(0, last);
-        const suffix = el.value.substring(cur);
-        const newValue = prefix + bangla + delimiter + suffix;
-        setValue(newValue);
-        if (onValueChange) onValueChange(newValue);
-        cursorRef.current = prefix.length + bangla.length + delimiter.length;
-        if (e.key !== "Tab") {
-          e.preventDefault();
-        }
-      }
-    };
-    return /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React3.createElement(Avro, null, /* @__PURE__ */ React3.createElement(
       "textarea",
       {
-        ref: innerRef,
-        value,
-        onChange: handleChange,
-        onKeyDown: handleKeyDown,
+        ref,
         style: useDefaultStyles ? { ...defaultStyle, ...style } : style,
         className,
+        onChange: handleChange,
         ...props
       }
-    );
+    ));
   }
 );
 AvroInput.displayName = "AvroInput";
@@ -1964,7 +2181,9 @@ function parse(input) {
 }
 var index_default = avro;
 export {
+  Avro,
   AvroInput,
   index_default as default,
-  parse
+  parse,
+  useAvro
 };

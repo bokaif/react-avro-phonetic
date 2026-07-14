@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { CSSProperties } from 'react';
 
 interface Match {
     type: string;
@@ -43,7 +43,47 @@ interface AvroInputProps extends React.TextareaHTMLAttributes<HTMLTextAreaElemen
 }
 declare const AvroInput: React.ForwardRefExoticComponent<AvroInputProps & React.RefAttributes<HTMLTextAreaElement>>;
 
+interface AvroProps {
+    children: React.ReactElement;
+    /**
+     * Inline styles for the dropdown menu
+     */
+    dropdownStyle?: CSSProperties;
+    /**
+     * Inline styles for each item in the dropdown
+     */
+    itemStyle?: CSSProperties;
+    /**
+     * Inline styles for the active item in the dropdown
+     */
+    activeItemStyle?: CSSProperties;
+}
+declare const Avro: React.FC<AvroProps>;
+
+interface UseAvroProps {
+    onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+}
+declare function useAvro(props?: UseAvroProps): {
+    inputRef: React.RefObject<any>;
+    bindings: {
+        onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+        onKeyDown: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+        onBlur: () => void;
+    };
+    suggestions: string[];
+    activeIndex: number;
+    isSuggesting: boolean;
+    caretCoords: {
+        top: number;
+        left: number;
+        height: number;
+    };
+    replaceWord: (suggestion: string) => void;
+    setActiveIndex: React.Dispatch<React.SetStateAction<number>>;
+};
+
 declare const avro: AvroPhonetic;
 declare function parse(input: string): string;
 
-export { AvroInput, type AvroInputProps, avro as default, parse };
+export { Avro, AvroInput, type AvroInputProps, type AvroProps, type UseAvroProps, avro as default, parse, useAvro };
